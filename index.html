@@ -246,6 +246,12 @@ AMZN"></textarea>
                         Saved Analyses
                     </div>
                     <div id="savedAnalysesList"></div>
+                    <!-- Export/Import Buttons -->
+                    <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="exportAnalyses()">⬇️ Export All Analyses</button>
+                        <input type="file" id="importAnalysesFile" style="display:none" onchange="importAnalysesFile(event)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('importAnalysesFile').click()">⬆️ Import Analyses</button>
+                    </div>
                 </div>
             </div>
             <div class="analysis-panel">
@@ -345,7 +351,6 @@ AMZN"></textarea>
             });
         }
 
-        // Toggle action selection: clicking again removes action
         function selectAction(ticker, action) {
             if (actions[ticker] === action) {
                 actions[ticker] = null;
@@ -520,28 +525,19 @@ AMZN"></textarea>
             }
         }
 
-        // Export Summary to Excel (plain CSV, NO formatting)
         function exportSummaryToExcel() {
             const actionOrder = ['buy', 'sell', 'nothing', 'potential-buy', 'potential-sell'];
             const headerNames = ['buy', 'sell', 'hold', 'watch +', 'watch -'];
-
-            // Collect tickers for each column
             const columns = actionOrder.map(action =>
                 Object.entries(actions)
                     .filter(([_, val]) => val === action)
                     .map(([ticker, _]) => ticker.toLowerCase())
             );
-
-            // Find maximum column length
             const maxRows = Math.max(...columns.map(col => col.length));
-
-            // Compose CSV (no bold, no formatting)
             let csv = headerNames.join(',') + '\n';
             for (let i = 0; i < maxRows; i++) {
                 csv += columns.map(col => col[i] ? col[i] : '').join(',') + '\n';
             }
-
-            // Download CSV
             const blob = new Blob([csv], { type: "text/csv" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -555,7 +551,41 @@ AMZN"></textarea>
             }, 0);
         }
 
-        // Button to scroll to summary section
+        // Export all analyses to JSON file
+        function exportAnalyses() {
+            const data = JSON.stringify(savedAnalyses, null, 2);
+            const blob = new Blob([data], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "portfolio-analyses.json";
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+        }
+
+        // Import analyses from JSON file
+        function importAnalysesFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    Object.assign(savedAnalyses, data);
+                    localStorage.setItem('portfolioAnalyses', JSON.stringify(savedAnalyses));
+                    loadSavedAnalyses();
+                    alert('Analyses imported!');
+                } catch (err) {
+                    alert('Import failed: Invalid file');
+                }
+            };
+            reader.readAsText(file);
+        }
+
         function scrollToSummary() {
             const summarySection = document.getElementById('summarySectionSeparate');
             if (summarySection) {
