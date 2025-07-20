@@ -100,13 +100,14 @@
         .saved-analyses { margin-top: 30px; }
         .saved-item {
             background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 10px;
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease;
+            display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: all 0.2s ease;
         }
         .saved-item:hover { background: #e9ecef; transform: translateX(5px); }
+        .saved-item-header { display: flex; justify-content: space-between; align-items: center; width: 100%;}
         .saved-item-name { font-weight: 500; color: #495057; }
         .saved-item-date { font-size: 12px; color: #6c757d; }
-        .saved-item-controls { display: flex; gap: 5px; }
-        .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; }
+        .button-group { display: flex; gap: 6px; }
+        .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 4px; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-danger:hover { background: #c82333; }
         .progress-section { margin-bottom: 25px; }
@@ -131,7 +132,14 @@
             font-family: 'Monaco', 'Menlo', monospace; font-weight: bold; font-size: 14px; color: #2c3e50;
             min-width: 80px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
             padding: 6px 10px; border-radius: 6px; text-align: center;
+            border: 1.5px solid #e9ecef;
         }
+        /* --- COLORED TICKER BOXES BASED ON ACTION --- */
+        .ticker-symbol.buy           { background: #e9fbe6 !important; color: #28a745 !important; border: 1.5px solid #b0e8ae; }
+        .ticker-symbol.sell          { background: #fdeaea !important; color: #dc3545 !important; border: 1.5px solid #f7b0b7; }
+        .ticker-symbol.nothing       { background: #f8f9fa !important; color: #6c757d !important; border: 1.5px solid #d1d5da; }
+        .ticker-symbol.potential-buy { background: #fffbe5 !important; color: #b88900 !important; border: 1.5px solid #ffe066; }
+        .ticker-symbol.potential-sell{ background: #fff2e1 !important; color: #fd7e14 !important; border: 1.5px solid #fd7e14; }
         .action-buttons { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
         .action-btn { padding: 4px 12px; border: 1px solid; border-radius: 6px; cursor: pointer;
             font-size: 12px; font-weight: 500; transition: all 0.2s ease; background: white;
@@ -181,6 +189,11 @@
         .summary-item.potential-sell .summary-count, .summary-item.potential-sell .summary-title { color: #fd7e14; }
         .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; font-style: italic; }
         .empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+        .saved-edit-area { padding: 12px 0 4px 0; }
+        .saved-edit-textarea {
+            width: 100%; min-height: 90px; border: 1.5px solid #ddd; border-radius: 7px; font-size: 13px; padding: 10px; font-family: 'Monaco',monospace; background: #fcfcfa; margin-bottom: 10px;
+        }
+        .edit-controls { display: flex; gap: 7px; margin-bottom: 6px;}
         @media (max-width: 1024px) {
             .main-content { grid-template-columns: 1fr; gap: 20px; }
             .analysis-panel { order: -1; }
@@ -202,31 +215,31 @@
     </style>
 </head>
 <body>
-    <div class="main-app" id="mainApp">
-        <div class="app-header">
-            <div class="app-title">
-                <div class="stock-icon">📊</div>
-                Portfolio Analyzer
-            </div>
-            <div class="header-controls">
-                <div class="save-controls">
-                    <input type="text" class="save-input" id="analysisName" placeholder="Analysis name...">
-                    <button class="btn btn-primary" onclick="saveAnalysis()">💾 Save</button>
-                    <button class="btn btn-secondary" onclick="clearAnalysis()">🗑️ Clear</button>
-                </div>
+<div class="main-app" id="mainApp">
+    <div class="app-header">
+        <div class="app-title">
+            <div class="stock-icon">📊</div>
+            Portfolio Analyzer
+        </div>
+        <div class="header-controls">
+            <div class="save-controls">
+                <input type="text" class="save-input" id="analysisName" placeholder="Analysis name...">
+                <button class="btn btn-primary" onclick="saveAnalysis()">💾 Save</button>
+                <button class="btn btn-secondary" onclick="clearAnalysis()">🗑️ Clear</button>
             </div>
         </div>
-        <div class="main-content">
-            <div class="input-panel">
-                <div class="panel-title">
-                    <div class="panel-icon">📝</div>
-                    Input Tickers
-                </div>
-                <div class="input-instructions">
-                    <strong>📋 Instructions:</strong> Enter stock tickers separated by commas, spaces, or new lines. 
-                    <br><em>Examples: AAPL, MSFT, GOOGL or one per line</em>
-                </div>
-                <textarea id="tickerInput" class="ticker-input" placeholder="🔤 Enter your stock tickers here...
+    </div>
+    <div class="main-content">
+        <div class="input-panel">
+            <div class="panel-title">
+                <div class="panel-icon">📝</div>
+                Input Tickers
+            </div>
+            <div class="input-instructions">
+                <strong>📋 Instructions:</strong> Enter stock tickers separated by commas, spaces, or new lines. 
+                <br><em>Examples: AAPL, MSFT, GOOGL or one per line</em>
+            </div>
+            <textarea id="tickerInput" class="ticker-input" placeholder="🔤 Enter your stock tickers here...
 
 Examples:
 AAPL, MSFT, GOOGL, TSLA, AMZN
@@ -239,334 +252,365 @@ MSFT
 GOOGL
 TSLA
 AMZN"></textarea>
-                <button class="process-btn" onclick="processTickers()">🚀 Start Analysis</button>
-                <div class="saved-analyses">
-                    <div class="panel-title">
-                        <div class="panel-icon">💾</div>
-                        Saved Analyses
-                    </div>
-                    <div id="savedAnalysesList"></div>
-                </div>
-            </div>
-            <div class="analysis-panel">
+            <button class="process-btn" onclick="processTickers()">🚀 Start Analysis</button>
+            <div class="saved-analyses">
                 <div class="panel-title">
-                    <div class="panel-icon">📊</div>
-                    Analysis Dashboard
+                    <div class="panel-icon">💾</div>
+                    Saved Analyses
                 </div>
-                <div style="margin-bottom: 12px;">
-                    <button class="btn btn-primary" onclick="scrollToSummary()" id="showSummaryBtn">📈 Show Summary Report</button>
-                </div>
-                <div class="search-bar">
-                    <input id="searchTickerInput" class="search-input" type="text" placeholder="🔍 Search tickers..." oninput="filterTickers()">
-                </div>
-                <div class="progress-section" id="progressSection" style="display: none;">
-                    <div class="progress-header">
-                        <span class="progress-text">Analysis Progress</span>
-                        <span id="completionBadge"></span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                </div>
-                <div class="ticker-analysis" id="tickerAnalysis"></div>
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-icon">📈</div>
-                    <h3>Ready to Analyze</h3>
-                    <p>Enter your stock tickers to get started with portfolio analysis</p>
-                </div>
+                <div id="savedAnalysesList"></div>
             </div>
         </div>
-        <div class="summary-section-separate" id="summarySectionSeparate">
+        <div class="analysis-panel">
             <div class="panel-title">
-                <div class="panel-icon">📈</div>
-                Summary Report
+                <div class="panel-icon">📊</div>
+                Analysis Dashboard
             </div>
-            <!-- Export to Excel Button -->
-            <button id="exportBtn" class="btn btn-primary" style="margin-bottom:18px;" onclick="exportSummaryToExcel()">⬇️ Export to Excel</button>
-            <div class="summary-list" id="summaryList"></div>
+            <div style="margin-bottom: 12px;">
+                <button class="btn btn-primary" onclick="scrollToSummary()" id="showSummaryBtn">📈 Show Summary Report</button>
+            </div>
+            <div class="search-bar">
+                <input id="searchTickerInput" class="search-input" type="text" placeholder="🔍 Search tickers..." oninput="filterTickers()">
+            </div>
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-header">
+                    <span class="progress-text">Analysis Progress</span>
+                    <span id="completionBadge"></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            <div class="ticker-analysis" id="tickerAnalysis"></div>
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📈</div>
+                <h3>Ready to Analyze</h3>
+                <p>Enter your stock tickers to get started with portfolio analysis</p>
+            </div>
         </div>
     </div>
-    <script>
-        let tickers = [];
-        let actions = {};
-        let savedAnalyses = {};
-        let filteredTickers = [];
-        let searchTerm = "";
+    <div class="summary-section-separate" id="summarySectionSeparate">
+        <div class="panel-title">
+            <div class="panel-icon">📈</div>
+            Summary Report
+        </div>
+        <button id="exportBtn" class="btn btn-primary" style="margin-bottom:18px;" onclick="exportSummaryToExcel()">⬇️ Export to Excel</button>
+        <div class="summary-list" id="summaryList"></div>
+    </div>
+</div>
+<script>
+let tickers = [];
+let actions = {};
+let savedAnalyses = {};
+let filteredTickers = [];
+let searchTerm = "";
+let currentlyEditing = null;
 
-        function processTickers() {
-            const input = document.getElementById('tickerInput').value.trim();
-            if (!input) return;
-            tickers = input.replace(/[,\n\r\t]+/g, ' ')
-                .split(/\s+/)
-                .filter(ticker => ticker.length > 0)
-                .map(ticker => ticker.toUpperCase());
-            tickers = [...new Set(tickers)];
-            if (tickers.length === 0) return;
-            actions = {};
-            tickers.forEach(ticker => actions[ticker] = null);
-            filteredTickers = [...tickers];
-            searchTerm = "";
-            document.getElementById("searchTickerInput").value = "";
-            renderTickerAnalysis();
-            updateProgress();
-            updateSummary();
-            document.getElementById('progressSection').style.display = 'block';
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('summarySectionSeparate').style.display = 'none';
+function processTickers() {
+    const input = document.getElementById('tickerInput').value.trim();
+    if (!input) return;
+    tickers = input.replace(/[,\n\r\t]+/g, ' ')
+        .split(/\s+/)
+        .filter(ticker => ticker.length > 0)
+        .map(ticker => ticker.toUpperCase());
+    tickers = [...new Set(tickers)];
+    if (tickers.length === 0) return;
+    actions = {};
+    tickers.forEach(ticker => actions[ticker] = null);
+    filteredTickers = [...tickers];
+    searchTerm = "";
+    document.getElementById("searchTickerInput").value = "";
+    renderTickerAnalysis();
+    updateProgress();
+    updateSummary();
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('summarySectionSeparate').style.display = 'none';
+}
+
+function filterTickers() {
+    searchTerm = document.getElementById("searchTickerInput").value.trim().toUpperCase();
+    if (searchTerm === "") {
+        filteredTickers = [...tickers];
+    } else {
+        filteredTickers = tickers.filter(ticker => ticker.includes(searchTerm));
+    }
+    renderTickerAnalysis();
+}
+
+function renderTickerAnalysis() {
+    const container = document.getElementById('tickerAnalysis');
+    container.innerHTML = '';
+    (filteredTickers || []).forEach(ticker => {
+        let action = actions[ticker];
+        let rowClass = action ? `ticker-item ${action}` : 'ticker-item';
+        let symbolClass = action ? `ticker-symbol ${action}` : 'ticker-symbol';
+        const tickerDiv = document.createElement('div');
+        tickerDiv.className = rowClass;
+        tickerDiv.innerHTML = `
+            <div class="${symbolClass}">${ticker}</div>
+            <div class="action-buttons">
+                <button class="action-btn buy${action==='buy'?' selected':''}" onclick="selectAction('${ticker}', 'buy')">🟢 Buy</button>
+                <button class="action-btn sell${action==='sell'?' selected':''}" onclick="selectAction('${ticker}', 'sell')">🔴 Sell</button>
+                <button class="action-btn nothing${action==='nothing'?' selected':''}" onclick="selectAction('${ticker}', 'nothing')">⚪ Hold</button>
+                <button class="action-btn potential-buy${action==='potential-buy'?' selected':''}" onclick="selectAction('${ticker}', 'potential-buy')">🟡 Watch+</button>
+                <button class="action-btn potential-sell${action==='potential-sell'?' selected':''}" onclick="selectAction('${ticker}', 'potential-sell')">🟠 Watch-</button>
+            </div>
+        `;
+        container.appendChild(tickerDiv);
+    });
+}
+
+function selectAction(ticker, action) {
+    if (actions[ticker] === action) {
+        actions[ticker] = null;
+    } else {
+        actions[ticker] = action;
+    }
+    renderTickerAnalysis();
+    updateProgress();
+    updateSummary();
+}
+
+function updateProgress() {
+    const completed = Object.values(actions).filter(action => action !== null).length;
+    const total = tickers.length;
+    const percentage = total > 0 ? (completed / total) * 100 : 0;
+    document.getElementById('progressFill').style.width = percentage + '%';
+    const badge = document.getElementById('completionBadge');
+    if (percentage === 100) {
+        badge.innerHTML = '<span class="completion-badge">✅ COMPLETED</span>';
+        document.getElementById('summarySectionSeparate').style.display = 'block';
+        updateSummary();
+    } else {
+        badge.innerHTML = `${completed}/${total}`;
+        badge.className = 'progress-text';
+        document.getElementById('summarySectionSeparate').style.display = 'none';
+    }
+}
+
+function updateSummary() {
+    const summary = {
+        'buy': 0, 'sell': 0, 'nothing': 0, 'potential-buy': 0, 'potential-sell': 0
+    };
+    Object.values(actions).forEach(action => {
+        if (action) summary[action]++;
+    });
+    const summaryList = document.getElementById('summaryList');
+    summaryList.innerHTML = '';
+    const actionGroups = {
+        'buy': [], 'sell': [], 'nothing': [], 'potential-buy': [], 'potential-sell': []
+    };
+    Object.entries(actions).forEach(([ticker, action]) => {
+        if (action) actionGroups[action].push(ticker);
+    });
+    const actionLabels = {
+        'buy': '🟢 Strong Buy',
+        'sell': '🔴 Sell',
+        'nothing': '⚪ Hold',
+        'potential-buy': '🟡 Watch (Buy)',
+        'potential-sell': '🟠 Watch (Sell)'
+    };
+    Object.entries(summary).forEach(([action, count]) => {
+        if (count > 0) {
+            const item = document.createElement('div');
+            item.className = `summary-item ${action}`;
+            item.innerHTML = `
+                <div class="summary-count">${count}</div>
+                <div class="summary-content">
+                    <div class="summary-title">${actionLabels[action]}</div>
+                    <div class="summary-tickers">${actionGroups[action].join(', ')}</div>
+                </div>
+            `;
+            summaryList.appendChild(item);
         }
+    });
+}
 
-        function filterTickers() {
-            searchTerm = document.getElementById("searchTickerInput").value.trim().toUpperCase();
-            if (searchTerm === "") {
-                filteredTickers = [...tickers];
-            } else {
-                filteredTickers = tickers.filter(ticker => ticker.includes(searchTerm));
-            }
-            renderTickerAnalysis();
-        }
+function saveAnalysis() {
+    const name = document.getElementById('analysisName').value.trim();
+    if (!name) {
+        alert('Please enter a name for your analysis');
+        return;
+    }
+    if (tickers.length === 0) {
+        alert('No tickers to save');
+        return;
+    }
+    const analysis = {
+        name: name,
+        date: new Date().toISOString(),
+        tickers: [...tickers],
+        actions: {...actions}
+    };
+    savedAnalyses[name] = analysis;
+    localStorage.setItem('portfolioAnalyses', JSON.stringify(savedAnalyses));
+    document.getElementById('analysisName').value = '';
+    loadSavedAnalyses();
+    const originalText = document.querySelector('.btn-primary').textContent;
+    document.querySelector('.btn-primary').textContent = '✅ Saved!';
+    setTimeout(() => {
+        document.querySelector('.btn-primary').textContent = originalText;
+    }, 2000);
+}
 
-        function renderTickerAnalysis() {
-            const container = document.getElementById('tickerAnalysis');
-            container.innerHTML = '';
-            (filteredTickers || []).forEach(ticker => {
-                const tickerDiv = document.createElement('div');
-                tickerDiv.className = 'ticker-item';
-                tickerDiv.innerHTML = `
-                    <div class="ticker-symbol">${ticker}</div>
-                    <div class="action-buttons">
-                        <button class="action-btn buy${actions[ticker]==='buy'?' selected':''}" onclick="selectAction('${ticker}', 'buy')">🟢 Buy</button>
-                        <button class="action-btn sell${actions[ticker]==='sell'?' selected':''}" onclick="selectAction('${ticker}', 'sell')">🔴 Sell</button>
-                        <button class="action-btn nothing${actions[ticker]==='nothing'?' selected':''}" onclick="selectAction('${ticker}', 'nothing')">⚪ Hold</button>
-                        <button class="action-btn potential-buy${actions[ticker]==='potential-buy'?' selected':''}" onclick="selectAction('${ticker}', 'potential-buy')">🟡 Watch+</button>
-                        <button class="action-btn potential-sell${actions[ticker]==='potential-sell'?' selected':''}" onclick="selectAction('${ticker}', 'potential-sell')">🟠 Watch-</button>
-                    </div>
-                `;
-                container.appendChild(tickerDiv);
-            });
-        }
+function loadSavedAnalyses() {
+    const stored = localStorage.getItem('portfolioAnalyses');
+    if (stored) {
+        savedAnalyses = JSON.parse(stored);
+    }
+    renderSavedAnalyses();
+}
 
-        // Toggle action selection: clicking again removes action
-        function selectAction(ticker, action) {
-            if (actions[ticker] === action) {
-                actions[ticker] = null;
-            } else {
-                actions[ticker] = action;
-            }
-            renderTickerAnalysis();
-            updateProgress();
-            updateSummary();
-        }
-
-        function updateProgress() {
-            const completed = Object.values(actions).filter(action => action !== null).length;
-            const total = tickers.length;
-            const percentage = total > 0 ? (completed / total) * 100 : 0;
-            document.getElementById('progressFill').style.width = percentage + '%';
-            const badge = document.getElementById('completionBadge');
-            if (percentage === 100) {
-                badge.innerHTML = '<span class="completion-badge">✅ COMPLETED</span>';
-                document.getElementById('summarySectionSeparate').style.display = 'block';
-                updateSummary();
-            } else {
-                badge.innerHTML = `${completed}/${total}`;
-                badge.className = 'progress-text';
-                document.getElementById('summarySectionSeparate').style.display = 'none';
-            }
-        }
-
-        function updateSummary() {
-            const summary = {
-                'buy': 0, 'sell': 0, 'nothing': 0, 'potential-buy': 0, 'potential-sell': 0
-            };
-            Object.values(actions).forEach(action => {
-                if (action) summary[action]++;
-            });
-            const summaryList = document.getElementById('summaryList');
-            summaryList.innerHTML = '';
-            const actionGroups = {
-                'buy': [], 'sell': [], 'nothing': [], 'potential-buy': [], 'potential-sell': []
-            };
-            Object.entries(actions).forEach(([ticker, action]) => {
-                if (action) actionGroups[action].push(ticker);
-            });
-            const actionLabels = {
-                'buy': '🟢 Strong Buy',
-                'sell': '🔴 Sell',
-                'nothing': '⚪ Hold',
-                'potential-buy': '🟡 Watch (Buy)',
-                'potential-sell': '🟠 Watch (Sell)'
-            };
-            Object.entries(summary).forEach(([action, count]) => {
-                if (count > 0) {
-                    const item = document.createElement('div');
-                    item.className = `summary-item ${action}`;
-                    item.innerHTML = `
-                        <div class="summary-count">${count}</div>
-                        <div class="summary-content">
-                            <div class="summary-title">${actionLabels[action]}</div>
-                            <div class="summary-tickers">${actionGroups[action].join(', ')}</div>
-                        </div>
-                    `;
-                    summaryList.appendChild(item);
-                }
-            });
-        }
-
-        function saveAnalysis() {
-            const name = document.getElementById('analysisName').value.trim();
-            if (!name) {
-                alert('Please enter a name for your analysis');
-                return;
-            }
-            if (tickers.length === 0) {
-                alert('No tickers to save');
-                return;
-            }
-            const analysis = {
-                name: name,
-                date: new Date().toISOString(),
-                tickers: [...tickers],
-                actions: {...actions}
-            };
-            savedAnalyses[name] = analysis;
-            localStorage.setItem('portfolioAnalyses', JSON.stringify(savedAnalyses));
-            document.getElementById('analysisName').value = '';
-            loadSavedAnalyses();
-            const originalText = document.querySelector('.btn-primary').textContent;
-            document.querySelector('.btn-primary').textContent = '✅ Saved!';
-            setTimeout(() => {
-                document.querySelector('.btn-primary').textContent = originalText;
-            }, 2000);
-        }
-
-        function loadSavedAnalyses() {
-            const stored = localStorage.getItem('portfolioAnalyses');
-            if (stored) {
-                savedAnalyses = JSON.parse(stored);
-            }
-            renderSavedAnalyses();
-        }
-
-        function renderSavedAnalyses() {
-            const container = document.getElementById('savedAnalysesList');
-            container.innerHTML = '';
-            const analyses = Object.values(savedAnalyses).sort((a, b) => new Date(b.date) - new Date(a.date));
-            if (analyses.length === 0) {
-                container.innerHTML = '<div style="color: #6c757d; font-style: italic; text-align: center; padding: 20px;">No saved analyses yet</div>';
-                return;
-            }
-            analyses.forEach(analysis => {
-                const item = document.createElement('div');
-                item.className = 'saved-item';
-                const date = new Date(analysis.date).toLocaleDateString();
-                item.innerHTML = `
+function renderSavedAnalyses() {
+    const container = document.getElementById('savedAnalysesList');
+    container.innerHTML = '';
+    const analyses = Object.values(savedAnalyses).sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (analyses.length === 0) {
+        container.innerHTML = '<div style="color: #6c757d; font-style: italic; text-align: center; padding: 20px;">No saved analyses yet</div>';
+        return;
+    }
+    analyses.forEach(analysis => {
+        const isEditing = currentlyEditing === analysis.name;
+        const item = document.createElement('div');
+        item.className = 'saved-item';
+        if (!isEditing) {
+            item.innerHTML = `
+                <div class="saved-item-header">
                     <div>
                         <div class="saved-item-name">${analysis.name}</div>
-                        <div class="saved-item-date">${date} • ${analysis.tickers.length} tickers</div>
+                        <div class="saved-item-date">${new Date(analysis.date).toLocaleDateString()} • ${analysis.tickers.length} tickers</div>
                     </div>
-                    <div class="saved-item-controls">
-                        <button class="btn btn-sm btn-primary" onclick="loadAnalysis('${analysis.name}')">📂 Load</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteAnalysis('${analysis.name}')">🗑️</button>
+                    <div class="button-group">
+                        <button class="btn btn-sm btn-primary" onclick="loadAnalysis('${analysis.name}');event.stopPropagation();">📂 Load</button>
+                        <button class="btn btn-sm" style="background:#ffba08;color:#333;" onclick="editAnalysis('${analysis.name}');event.stopPropagation();">✏️ Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteAnalysis('${analysis.name}');event.stopPropagation();">🗑️</button>
                     </div>
-                `;
-                item.onclick = (e) => {
-                    if (!e.target.closest('button')) {
-                        loadAnalysis(analysis.name);
-                    }
-                };
-                container.appendChild(item);
-            });
+                </div>
+            `;
+        } else {
+            item.innerHTML = `
+                <div style="font-weight:600;font-size:1rem;margin-bottom:5px;">Editing: ${analysis.name}</div>
+                <textarea class="saved-edit-textarea" id="editTickersTextarea">${analysis.tickers.join('\n')}</textarea>
+                <div class="edit-controls">
+                    <button class="btn btn-sm btn-primary" onclick="saveEditedAnalysis('${analysis.name}')">💾 Save</button>
+                    <button class="btn btn-sm btn-secondary" onclick="cancelEditAnalysis()">✖ Cancel</button>
+                </div>
+                <div style="color:#666;font-size:12px;">One ticker per line, case-insensitive, duplicates removed.</div>
+            `;
         }
+        container.appendChild(item);
+    });
+}
 
-        function loadAnalysis(name) {
-            const analysis = savedAnalyses[name];
-            if (!analysis) return;
-            tickers = [...analysis.tickers];
-            actions = {...analysis.actions};
-            filteredTickers = [...tickers];
-            searchTerm = "";
-            document.getElementById('tickerInput').value = tickers.join('\n');
-            document.getElementById('analysisName').value = name;
-            document.getElementById("searchTickerInput").value = "";
-            renderTickerAnalysis();
-            updateProgress();
-            updateSummary();
-            document.getElementById('progressSection').style.display = 'block';
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('summarySectionSeparate').style.display = 'none';
-        }
+function loadAnalysis(name) {
+    const analysis = savedAnalyses[name];
+    if (!analysis) return;
+    tickers = [...analysis.tickers];
+    actions = {...analysis.actions};
+    filteredTickers = [...tickers];
+    searchTerm = "";
+    document.getElementById('tickerInput').value = tickers.join('\n');
+    document.getElementById('analysisName').value = name;
+    document.getElementById("searchTickerInput").value = "";
+    renderTickerAnalysis();
+    updateProgress();
+    updateSummary();
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('summarySectionSeparate').style.display = 'none';
+}
 
-        function deleteAnalysis(name) {
-            if (confirm(`Are you sure you want to delete "${name}"?`)) {
-                delete savedAnalyses[name];
-                localStorage.setItem('portfolioAnalyses', JSON.stringify(savedAnalyses));
-                renderSavedAnalyses();
-            }
-        }
+function deleteAnalysis(name) {
+    if (confirm(`Are you sure you want to delete "${name}"?`)) {
+        delete savedAnalyses[name];
+        localStorage.setItem('portfolioAnalyses', JSON.stringify(savedAnalyses));
+        renderSavedAnalyses();
+    }
+}
 
-        function clearAnalysis() {
-            if (confirm('Clear current analysis?')) {
-                tickers = [];
-                actions = {};
-                filteredTickers = [];
-                searchTerm = "";
-                document.getElementById('tickerInput').value = '';
-                document.getElementById('analysisName').value = '';
-                document.getElementById("searchTickerInput").value = "";
-                document.getElementById('tickerAnalysis').innerHTML = '';
-                document.getElementById('progressSection').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'block';
-                document.getElementById('summarySectionSeparate').style.display = 'none';
-            }
-        }
+function clearAnalysis() {
+    if (confirm('Clear current analysis?')) {
+        tickers = [];
+        actions = {};
+        filteredTickers = [];
+        searchTerm = "";
+        document.getElementById('tickerInput').value = '';
+        document.getElementById('analysisName').value = '';
+        document.getElementById("searchTickerInput").value = "";
+        document.getElementById('tickerAnalysis').innerHTML = '';
+        document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('summarySectionSeparate').style.display = 'none';
+    }
+}
 
-        // Export Summary to Excel (plain CSV, NO formatting)
-        function exportSummaryToExcel() {
-            const actionOrder = ['buy', 'sell', 'nothing', 'potential-buy', 'potential-sell'];
-            const headerNames = ['buy', 'sell', 'hold', 'watch +', 'watch -'];
+function editAnalysis(name) {
+    currentlyEditing = name;
+    renderSavedAnalyses();
+}
 
-            // Collect tickers for each column
-            const columns = actionOrder.map(action =>
-                Object.entries(actions)
-                    .filter(([_, val]) => val === action)
-                    .map(([ticker, _]) => ticker.toLowerCase())
-            );
+function saveEditedAnalysis(name) {
+    const textarea = document.getElementById('editTickersTextarea');
+    if (!textarea) return;
+    const newTickers = textarea.value.split(/\s*[\n,]+\s*/).filter(Boolean).map(t=>t.toUpperCase());
+    if (newTickers.length === 0) {
+        alert('Please enter at least one ticker.');
+        return;
+    }
+    let oldActions = savedAnalyses[name].actions || {};
+    let newActions = {};
+    newTickers.forEach(ticker => {
+        newActions[ticker] = oldActions[ticker] || null;
+    });
+    savedAnalyses[name].tickers = [...new Set(newTickers)];
+    savedAnalyses[name].actions = newActions;
+    savedAnalyses[name].date = new Date().toISOString();
+    localStorage.setItem('portfolioAnalyses', JSON.stringify(savedAnalyses));
+    currentlyEditing = null;
+    renderSavedAnalyses();
+}
+function cancelEditAnalysis() {
+    currentlyEditing = null;
+    renderSavedAnalyses();
+}
 
-            // Find maximum column length
-            const maxRows = Math.max(...columns.map(col => col.length));
-
-            // Compose CSV (no bold, no formatting)
-            let csv = headerNames.join(',') + '\n';
-            for (let i = 0; i < maxRows; i++) {
-                csv += columns.map(col => col[i] ? col[i] : '').join(',') + '\n';
-            }
-
-            // Download CSV
-            const blob = new Blob([csv], { type: "text/csv" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "portfolio-summary.csv";
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 0);
-        }
-
-        // Button to scroll to summary section
-        function scrollToSummary() {
-            const summarySection = document.getElementById('summarySectionSeparate');
-            if (summarySection) {
-                summarySection.style.display = 'block';
-                summarySection.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSavedAnalyses();
-        });
-    </script>
+// Export Summary to Excel (plain CSV, NO formatting)
+function exportSummaryToExcel() {
+    const actionOrder = ['buy', 'sell', 'nothing', 'potential-buy', 'potential-sell'];
+    const headerNames = ['buy', 'sell', 'hold', 'watch +', 'watch -'];
+    const columns = actionOrder.map(action =>
+        Object.entries(actions)
+            .filter(([_, val]) => val === action)
+            .map(([ticker, _]) => ticker.toLowerCase())
+    );
+    const maxRows = Math.max(...columns.map(col => col.length));
+    let csv = headerNames.join(',') + '\n';
+    for (let i = 0; i < maxRows; i++) {
+        csv += columns.map(col => col[i] ? col[i] : '').join(',') + '\n';
+    }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "portfolio-summary.csv";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 0);
+}
+function scrollToSummary() {
+    const summarySection = document.getElementById('summarySectionSeparate');
+    if (summarySection) {
+        summarySection.style.display = 'block';
+        summarySection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    loadSavedAnalyses();
+});
+</script>
 </body>
 </html>
